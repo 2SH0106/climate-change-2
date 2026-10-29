@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>빙하 기지 탈출</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#12303f;--bg2:#0b1f2b;--bg3:#07151d;
+  --ink:#071019;--panel:#163744;--panel2:#1d4454;
+  --tx:#EAF4F8;--muted:#8FB6C4;
+  --ice:#8FE1F2;--cyan:#2EA6C8;--cyanD:#17748f;
+  --warn:#FF5A5A;--gold:#F4CE5E;--ok:#35C88A;--pink:#FF6FA0;
+  box-sizing:border-box;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;color:var(--tx);font-family:"IBM Plex Sans KR",system-ui,sans-serif;font-size:16px;line-height:1.55;
+  background:radial-gradient(120% 90% at 50% 0%,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);
+  background-attachment:fixed;overflow-x:hidden;image-rendering:pixelated;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(143,225,242,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(143,225,242,.05) 1px,transparent 1px);background-size:30px 30px}
+/* doom vignette (게이지에 따라 붉어짐) */
+#vig{position:fixed;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 0 rgba(255,40,40,0);transition:box-shadow .6s;opacity:0}
+#amb{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.4;transition:opacity .6s,filter .6s}
+#cracks{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:linear-gradient(118deg,transparent 0 5.6%,rgba(255,60,60,.55) 5.9% 6.3%,transparent 6.6%),
+  linear-gradient(-124deg,transparent 0 7.6%,rgba(255,60,60,.5) 7.9% 8.3%,transparent 8.6%),
+  linear-gradient(205deg,transparent 0 9.6%,rgba(255,60,60,.45) 9.9% 10.3%,transparent 10.6%),
+  linear-gradient(-32deg,transparent 0 6.6%,rgba(255,60,60,.4) 6.9% 7.3%,transparent 7.6%)}
+body.crisis #cracks{opacity:.6;animation:crackflick 2s infinite}
+@keyframes crackflick{0%,100%{opacity:.55}50%{opacity:.18}}
+#amb span{position:absolute;bottom:-40px;opacity:0;animation:rise linear infinite;will-change:transform,opacity}
+@keyframes rise{0%{transform:translateY(0) rotate(0);opacity:0}12%{opacity:.85}100%{transform:translateY(-112vh) rotate(25deg);opacity:0}}
+h1,h2,h3{font-family:"Do Hyeon","IBM Plex Sans KR",sans-serif;font-weight:400;line-height:1.2;margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:620px;margin:0 auto;padding:16px 16px 80px;position:relative;z-index:1}
+.sub{color:var(--muted);font-size:.9rem}
+.center{text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--cyan);color:#042;border:3px solid var(--ink);border-radius:6px;padding:12px 20px;font-family:"Do Hyeon",sans-serif;font-size:1.02rem;box-shadow:4px 4px 0 var(--ink);transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.btn.g{background:var(--panel2);color:var(--ice)}
+.btn.gold{background:var(--gold);color:#5a4400}
+.btn.warn{background:var(--warn);color:#2a0000}
+.btn[disabled]{opacity:.4;box-shadow:2px 2px 0 var(--ink);transform:none;cursor:default}
+.name{font:inherit;width:100%;max-width:360px;background:#0b222e;border:3px solid var(--ink);color:var(--tx);border-radius:6px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink)}
+.byline{font-family:"Do Hyeon",sans-serif;color:var(--ice);font-size:.95rem;text-align:center;margin-top:10px;letter-spacing:.2px}
+.byline .hb{color:var(--pink)}
+.byline.bottom{margin:18px 0 2px;opacity:.85}
+.byline.play{text-align:left;font-size:.78rem;color:var(--muted);margin:0 0 8px 2px}
+.titlebadge{display:inline-block;font-family:"Press Start 2P",monospace;font-size:.58rem;letter-spacing:1px;color:#07151d;background:var(--ice);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:7px 10px;border-radius:4px;margin-bottom:14px}
+.logo{font-family:"Do Hyeon",sans-serif;font-size:clamp(2.3rem,11vw,3.4rem);line-height:1.05;color:#fff;
+  text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),3px 3px var(--ink),-3px 3px var(--ink),3px -3px var(--ink),-3px -3px var(--ink),6px 6px 0 var(--cyanD)}
+.tagline{color:var(--ice);font-family:"Do Hyeon",sans-serif;font-size:1.02rem;margin-top:12px}
+.panel{background:var(--panel);border:3px solid var(--ink);border-radius:10px;padding:18px 16px;box-shadow:6px 6px 0 var(--ink);margin-top:16px}
+.story{background:#0e2630;border:3px solid var(--ink);border-left:5px solid var(--cyan);border-radius:8px;padding:13px 15px;line-height:1.6;box-shadow:4px 4px 0 var(--ink);margin:12px 0}
+.story b{color:var(--ice)}
+.slabel{display:inline-block;font-family:"Do Hyeon",sans-serif;font-size:1.02rem;color:#07151d;background:var(--ice);border:3px solid var(--ink);border-radius:6px;padding:5px 12px;margin-right:9px;box-shadow:3px 3px 0 var(--ink)}
+.sblock{background:#0e2630;border:2px solid var(--ink);border-left:5px solid var(--cyan);border-radius:8px;padding:12px 14px;line-height:1.65;margin-bottom:14px}
+.sblock .stxt{color:#cfeaf2}
+.sblock b{color:var(--ice)}
+.sdiv{border:0;border-top:2px dashed #2b4c58;margin:0 0 13px}
+.mhead{display:inline-block;font-family:"Do Hyeon",sans-serif;font-size:1.02rem;color:#5a4400;background:var(--gold);border:3px solid var(--ink);border-radius:6px;padding:5px 12px;margin-bottom:12px;box-shadow:3px 3px 0 var(--ink)}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:3px solid var(--ink);border-radius:8px;padding:10px 13px;box-shadow:4px 4px 0 var(--ink)}
+.hud .rm{font-family:"Do Hyeon",sans-serif;font-size:1rem}
+.hud .rm small{display:block;font-family:"Press Start 2P",monospace;font-size:.46rem;color:var(--muted);margin-top:4px}
+.hud .right{text-align:right}
+.hud .timer{font-family:"Press Start 2P",monospace;font-size:1rem;color:var(--ice)}
+.hud .timer.low{color:var(--warn);animation:beat .7s infinite}
+.hud .timer.plus{color:var(--ok);animation:beat .4s 2}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:45;font-family:"Do Hyeon",sans-serif;font-size:1rem;color:#043;background:var(--ok);border:3px solid var(--ink);border-radius:8px;padding:8px 16px;box-shadow:4px 4px 0 var(--ink);animation:toastup 1.5s ease-out forwards}
+@keyframes toastup{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+.hud .hchip{display:inline-block;font-family:"Press Start 2P",monospace;font-size:.46rem;color:#fff;background:var(--warn);border:2px solid var(--ink);border-radius:4px;padding:3px 5px;margin-top:4px}
+@keyframes beat{0%,100%{transform:scale(1)}30%{transform:scale(1.18)}}
+.gauge{margin:12px 0 4px}
+.gauge .lab{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:5px;font-weight:600}
+.gauge .lab b{color:var(--warn)}
+.gbar{height:16px;border:3px solid var(--ink);border-radius:6px;background:#0a1e28;overflow:hidden;box-shadow:3px 3px 0 var(--ink)}
+.gbar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--warn) 0 10px,#d83a3a 10px 14px);transition:width .4s}
+.status{font-size:.82rem;color:var(--warn);margin-top:6px;font-weight:600;min-height:1.1em}
+.qtag{font-family:"Do Hyeon",sans-serif;font-size:.78rem;color:var(--muted);margin-bottom:8px}
+.ptitle{font-size:1.14rem;font-weight:600;line-height:1.5;margin-bottom:14px;color:#fff;background:rgba(244,206,94,.12);border:2px solid var(--gold);border-left:6px solid var(--gold);border-radius:8px;padding:12px 14px}
+/* match */
+.matchwrap{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcol{display:flex;flex-direction:column;gap:9px}
+.mcol h4{font-family:"Do Hyeon",sans-serif;font-size:.85rem;color:var(--muted);text-align:center;margin:0 0 2px}
+.mi{background:#0b222e;border:3px solid var(--ink);border-radius:7px;padding:11px 9px;font-size:.9rem;text-align:center;box-shadow:3px 3px 0 var(--ink);transition:transform .06s}
+.mi:active{transform:translate(2px,2px)}
+.mi.sel{border-color:var(--gold);background:#2a3a1e}
+.mi.done{border-color:var(--ok);background:#0f3a30;color:var(--ice);opacity:.9;cursor:default}
+.mi.bad{border-color:var(--warn);animation:shake .35s}
+/* switch */
+.swlist{display:flex;flex-direction:column;gap:10px}
+.sw{background:#0b222e;border:3px solid var(--ink);border-radius:8px;padding:11px 12px;box-shadow:3px 3px 0 var(--ink)}
+.sw .q{font-size:.95rem;line-height:1.45;margin-bottom:9px}
+.sw .ox{display:flex;gap:8px}
+.sw .ox button{flex:1;border:2px solid var(--ink);border-radius:6px;background:var(--panel2);color:var(--ice);font-family:"Do Hyeon",sans-serif;font-size:1.05rem;padding:8px}
+.sw .ox button.on{background:var(--cyan);color:#042}
+.sw.bad{border-color:var(--warn);animation:shake .35s}
+/* digits */
+.digits{display:flex;gap:10px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.digits input{width:52px;height:64px;text-align:center;font-family:"Press Start 2P",monospace;font-size:1.25rem;background:#0b222e;color:var(--ice);border:3px solid var(--ink);border-radius:8px;box-shadow:3px 3px 0 var(--ink)}
+.clue{background:#0e2630;border:2px dashed var(--cyanD);border-radius:7px;padding:10px 12px;font-size:.92rem;margin:8px 0;line-height:1.5}
+.clue b{color:var(--gold)}
+/* order */
+.orderpad{display:flex;flex-direction:column;gap:9px}
+.oi{display:flex;align-items:center;gap:10px;background:#0b222e;border:3px solid var(--ink);border-radius:7px;padding:11px 13px;font-size:.95rem;box-shadow:3px 3px 0 var(--ink);text-align:left}
+.oi .num{width:26px;height:26px;flex:0 0 26px;border:2px solid var(--ink);border-radius:5px;background:var(--panel2);display:grid;place-items:center;font-family:"Press Start 2P",monospace;font-size:.6rem;color:var(--ice)}
+.oi.done{border-color:var(--ok);background:#0f3a30}.oi.done .num{background:var(--ok);color:#043}
+.oi.bad{border-color:var(--warn);animation:shake .35s}
+.chain{display:flex;flex-wrap:wrap;gap:6px;min-height:20px;margin-bottom:10px;font-size:.82rem;color:var(--muted)}
+.chain span{background:var(--panel2);border:2px solid var(--ink);border-radius:5px;padding:3px 7px;color:var(--ice)}
+/* direction */
+.slots{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+.slot{display:flex;align-items:center;gap:10px;background:#0b222e;border:3px solid var(--ink);border-radius:7px;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);font-size:.9rem}
+.slot .ar{width:40px;height:40px;flex:0 0 40px;border:3px solid var(--ink);border-radius:6px;display:grid;place-items:center;font-size:1.3rem;background:var(--panel2)}
+.slot.filled .ar{background:var(--ok);color:#043}.slot.bad{animation:shake .35s}
+.dirpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:8px;justify-content:center;margin:0 auto}
+.dirpad button{border:3px solid var(--ink);border-radius:8px;background:var(--cyan);color:#042;font-size:1.5rem;box-shadow:3px 3px 0 var(--ink)}
+.dirpad button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.dp-up{grid-column:2;grid-row:1}.dp-left{grid-column:1;grid-row:2}.dp-right{grid-column:3;grid-row:2}.dp-down{grid-column:2;grid-row:3}
+.fb{margin-top:14px;padding:12px 14px;border:3px solid var(--ink);border-radius:8px;font-size:.95rem;line-height:1.5;box-shadow:3px 3px 0 var(--ink)}
+.fb.ok{background:#0f3a30}.fb.no{background:#3a1512}
+.fb .v{font-family:"Do Hyeon",sans-serif;display:block;margin-bottom:3px}
+.fb.ok .v{color:var(--ok)}.fb.no .v{color:var(--warn)}
+.hintbox{background:#1a2d10;border:3px solid var(--ink);border-left:5px solid var(--gold);border-radius:8px;padding:11px 14px;margin-top:12px;font-size:.92rem;line-height:1.55;box-shadow:3px 3px 0 var(--ink)}
+.hintbox b{color:var(--gold)}
+/* doom flash */
+#flash{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(255,60,40,.0) 0%,rgba(120,10,10,.0) 70%)}
+#flash.show{animation:flashin 1.3s ease-out forwards}
+@keyframes flashin{0%{opacity:0}12%{opacity:1;background:radial-gradient(circle at 50% 45%,rgba(255,80,60,.5) 0%,rgba(120,10,10,.75) 80%)}100%{opacity:0;background:radial-gradient(circle at 50% 45%,rgba(255,80,60,0) 0%,rgba(120,10,10,0) 80%)}}
+#flash .fbox{text-align:center;transform:rotate(-2deg)}
+#flash .fs{font-family:"Press Start 2P",monospace;font-size:.7rem;color:#FFD23F;letter-spacing:1px;text-shadow:2px 2px 0 #000}
+#flash .ft{font-family:"Do Hyeon",sans-serif;font-size:clamp(1.6rem,8vw,2.4rem);color:#fff;text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,5px 5px 0 #b22}
+#flash .fd{color:#ffd;font-size:.95rem;margin-top:6px;max-width:320px;margin-left:auto;margin-right:auto}
+.quake{animation:quake .5s}
+@keyframes quake{10%{transform:translate(-5px,2px)}30%{transform:translate(6px,-4px)}50%{transform:translate(-6px,3px)}70%{transform:translate(5px,4px)}90%{transform:translate(-3px,-2px)}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-5px)}}
+#flash.show.green{animation:flashgreen 1.3s ease-out forwards}
+@keyframes flashgreen{0%{opacity:0}12%{opacity:1;background:radial-gradient(circle at 50% 45%,rgba(60,230,140,.42) 0%,rgba(10,90,50,.68) 80%)}100%{opacity:0;background:transparent}}
+/* ===== 방 안 장면(캐릭터 + 온난화 위협) ===== */
+.scene{position:relative;height:250px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:4px 4px 0 var(--ink);margin-top:12px;background:#0b1f2b}
+.scene.danger{border-color:var(--warn);animation:dpulse .9s infinite}
+@keyframes dpulse{0%,100%{box-shadow:4px 4px 0 var(--ink)}50%{box-shadow:4px 4px 0 var(--ink),0 0 22px 4px rgba(255,70,70,.7)}}
+.earth{display:block;width:100%;height:100%}
+.lbl{font-family:"IBM Plex Sans KR",sans-serif;font-size:9.5px;font-weight:700;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#06131c;stroke-width:3.5px;stroke-linejoin:round}
+.ic{font-size:24px;text-anchor:middle}
+#ocean{transition:fill .5s}#heat{transition:opacity .5s}#flood{transition:y .5s,height .5s}
+#cHeat,#cRain,#cStorm,#arA,#arB,#arC,#vPerson,#vHouse,#vBldg{transition:opacity .4s}#land,#grass{transition:opacity .5s}
+.arrow{font-size:15px;fill:#ffd23f;text-anchor:middle;paint-order:stroke;stroke:#06131c;stroke-width:3px;stroke-linejoin:round}
+.ic.spin.fast{animation-duration:.85s}
+.shake{transform-box:fill-box;transform-origin:bottom center;animation:bshake .22s infinite}
+@keyframes bshake{25%{transform:translateX(-1.5px) rotate(12deg)}75%{transform:translateX(1.5px) rotate(17deg)}}
+.sway{transform-box:fill-box;transform-origin:bottom center;animation:sway 1.2s ease-in-out infinite}
+@keyframes sway{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.fly{transform-box:fill-box;transform-origin:center;animation:fly 2.2s ease-in-out infinite}
+.fly.f2{animation-duration:2.9s;animation-delay:.6s}
+@keyframes fly{0%,100%{transform:translate(0,0)}25%{transform:translate(11px,-7px)}50%{transform:translate(-7px,5px)}75%{transform:translate(9px,7px)}}
+.scoll{position:absolute;top:6px;right:8px;z-index:4;font-family:"Do Hyeon",sans-serif;font-size:.74rem;color:var(--ice);background:#0b222edd;border:2px solid var(--ink);border-radius:6px;padding:4px 9px;box-shadow:2px 2px 0 var(--ink)}
+.scene.collapsed{height:48px}
+.scene.collapsed .earth{display:none}
+.scene.collapsed .scene-tag{bottom:auto;top:13px;font-size:.98rem}
+.scene.crisis{animation:crisisflick 2.4s infinite}
+@keyframes crisisflick{0%,100%{filter:none}47%{filter:brightness(1.2) saturate(1.35)}49%{filter:brightness(.62)}51%{filter:none}}
+.puff{opacity:0;transform-box:fill-box;transform-origin:center;animation:puffrise 2.4s ease-out infinite}
+.puff.p2{animation-delay:1.2s}
+@keyframes puffrise{0%{opacity:0;transform:translateY(0)}20%{opacity:.85}100%{opacity:0;transform:translateY(-34px)}}
+.ic.spin{transform-box:fill-box;transform-origin:center;animation:spin 2.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes floaty{50%{transform:translateY(-5px)}}
+.scene-tag{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-family:"Do Hyeon",sans-serif;font-size:1rem;color:#fff;text-shadow:1px 1px 0 #000,0 0 8px rgba(0,0,0,.9)}
+/* ===== 탈출 성공 장면 ===== */
+.winscene{position:relative;height:130px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#14415a,#0b2a38);box-shadow:5px 5px 0 var(--ok);margin:4px 0 12px;display:flex;align-items:center;justify-content:center;gap:14px}
+.winscene .wi{font-size:2.6rem;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.winscene .door{position:relative}
+.winscene .door::after{content:"";position:absolute;inset:-6px -30px;background:radial-gradient(circle,rgba(255,240,180,.55),transparent 70%);z-index:-1}
+.winscene .hero-run{animation:runby 1s ease-in-out infinite}
+@keyframes runby{50%{transform:translateX(9px)}}
+.winscene .conf{position:absolute;top:7px;left:0;right:0;text-align:center;font-size:1.3rem;animation:floaty 1.5s ease-in-out infinite}
+.winscene .earth{animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* endings */
+.ending{text-align:center;padding:12px 0}
+.end-sfx{font-family:"Do Hyeon",sans-serif;font-size:clamp(1.7rem,8vw,2.4rem);letter-spacing:1px;transform:rotate(-2deg);margin-bottom:8px}
+.ending.good .end-sfx{color:var(--ok);text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),5px 5px 0 var(--cyanD)}
+.ending.bad .end-sfx{color:var(--ice);text-shadow:3px 0 var(--ink),-3px 0 var(--ink),0 3px var(--ink),0 -3px var(--ink),5px 5px 0 #3a6b8a}
+.ending .big{font-family:"Do Hyeon",sans-serif;font-size:clamp(1.5rem,7vw,2.1rem);color:#fff;margin:4px 0 10px}
+.epi{background:#0e2630;border:3px solid var(--ink);border-radius:8px;padding:14px 15px;text-align:left;line-height:1.6;box-shadow:4px 4px 0 var(--ink);margin:12px 0}
+.epi b{color:var(--ice)}
+.stat{width:100%;max-width:360px;margin:12px auto;border-collapse:collapse}
+.stat td{padding:7px 8px;border-bottom:2px solid var(--ink)}
+.stat td:last-child{text-align:right;color:var(--ice);font-weight:700}
+.stat tr:last-child td{border-bottom:0}
+.perfect{color:var(--gold);font-family:"Do Hyeon",sans-serif}
+.modepick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.modecard{text-align:left;background:var(--panel);border:3px solid var(--ink);border-radius:10px;padding:13px;box-shadow:4px 4px 0 var(--ink);opacity:.7;transition:transform .06s,box-shadow .06s}
+.modecard.on{opacity:1;box-shadow:5px 5px 0 var(--cyan)}
+.modecard.hard.on{box-shadow:5px 5px 0 var(--warn)}
+.modecard:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.mc-top{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.mc-ic{font-size:1.15rem}.mc-nm{font-family:"Do Hyeon",sans-serif;font-size:1.02rem}
+.mc-chk{margin-left:auto;font-family:"Press Start 2P",monospace;font-size:.42rem;color:#fff;background:var(--cyan);border:2px solid var(--ink);border-radius:3px;padding:2px 4px;opacity:0}
+.modecard.on .mc-chk{opacity:1}.modecard.hard.on .mc-chk{background:var(--warn)}
+.mc-dc{font-size:.84rem;line-height:1.45;color:#cfe3ea}.mc-dc b{color:#fff}
+.mc-tag{margin-top:7px;font-size:.72rem;color:var(--muted);border-top:2px dotted var(--ink);padding-top:6px}
+.modecard.hard .mc-nm{color:#ff9ba6}
+@media (max-width:430px){.modepick{grid-template-columns:1fr}.matchwrap{gap:8px}.digits input{width:44px;height:56px;font-size:1.05rem}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}#flash.show{opacity:0}#amb{display:none}}
+</style>
+</head>
+<body>
+<div id="amb" aria-hidden="true"></div>
+<div id="cracks" aria-hidden="true"></div>
+<div id="vig"></div>
+<div id="flash" aria-hidden="true"></div>
+<div class="wrap" id="app"></div>
+<script>
+const BYLINE='made by 쏭쌤 · I <span class="hb">💗</span> 지구과학';
+const $=s=>document.querySelector(s);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pick=(a,n)=>shuffle(a).slice(0,n);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const O='¹⁸O',P='¹⁶O',R='¹⁸O/¹⁶O';
+
+/* ===== 멸망 단계 ===== */
+const DOOM=[
+ {t:'폭염·열대야',d:'기록적 더위로 온열질환이 속출한다.'},
+ {t:'집중호우·도시 침수',d:'강해진 장마로 도시가 물에 잠긴다.'},
+ {t:'해수면 상승',d:'해안 도시가 바닷물의 위협을 받는다.'},
+ {t:'초강력 태풍',d:'더워진 바다가 거대한 태풍을 키운다.'},
+ {t:'감염병 북상',d:'모기 매개 감염병이 북쪽으로 번진다.'}
+];
+const HARD_LIMIT=6;          // 하드: 게이지 한계 → 빙하기
+const NORMAL_CAP=5;          // 일반: 재난 표시 상한(멸망은 안 함)
+
+/* ===== 방 정의(파라미터 랜덤) ===== */
+const MATCH_POOL=[['빙하 속 기포','당시 대기 조성'],['나무 나이테','기온·강수량'],['산호 성장률','과거 수온'],['꽃가루 화석','식생·기온 경향'],['빙하 속 '+R+' 비','과거의 기온']];
+const ISO_POOL=[
+ {q:'온난한 시기에는 빙하 속 '+R+' 비가 높다',a:true},
+ {q:'한랭한 시기에는 해양 화석 속 '+O+'이 상대적으로 적다',a:false},
+ {q:O+'은 '+P+'보다 무거워 증발이 잘 되지 않는다',a:true},
+ {q:'온난한 시기에는 해양 화석 속 '+O+'이 상대적으로 많아진다',a:false},
+ {q:'한랭기에는 '+O+'의 증발이 약해 빙하 속 '+O+'이 적어진다',a:true},
+ {q:'태양 복사는 주로 적외선 영역으로 지구에 들어온다',a:false}
+];
+const LAT_POOL=[
+ {q:'저위도(적도)는 흡수하는 태양 복사 에너지가 방출하는 지구 복사 에너지보다 많다',a:true},
+ {q:'고위도(극)는 에너지가 남아도는 과잉 상태다',a:false},
+ {q:'남는 에너지는 대기와 해수의 순환으로 고위도로 수송된다',a:true},
+ {q:'지구는 받은 양만큼의 에너지를 적외선으로 방출해 복사 평형을 이룬다',a:true},
+ {q:'온실 기체는 가시광선을 선택적으로 흡수한다',a:false}
+];
+const REFL={'눈':85,'빙하':60,'토양':17};
+const HEAT_VARIANTS=[
+ {ask:'복사 평형을 이용해, 지표가 <b>지표 복사</b>로 내보내는 양을 구하세요.',
+  clue:['지표가 흡수하는 에너지 = 태양 직접 45 + 대기 재복사 88 = <b>133</b>','복사 평형이므로 <b>지표가 방출하는 에너지도 133</b>','지표 방출 = 전도·대류 8 + 증발 21 + <b>지표 복사 ?</b>'],code:'104'},
+ {ask:'복사 평형을 이용해, 지표가 <b>대기 재복사</b>로 받는 양을 구하세요.',
+  clue:['복사 평형이므로 지표 흡수 = 지표 방출 = <b>133</b>','지표가 방출하는 에너지 = 전도·대류 8 + 증발 21 + 지표 복사 104 = 133','지표 흡수 = 태양 직접 45 + <b>대기 재복사 ?</b>'],code:'88'},
+ {ask:'복사 평형을 이용해, 지표에서 <b>직접 우주로</b> 나가는 지구 복사량을 구하세요.',
+  clue:['지구가 흡수하는 에너지 = 100 − 반사·산란 30 = <b>70</b>','복사 평형이므로 <b>지구가 방출하는 에너지도 70</b>','지구 방출 = 대기를 통해 66 + <b>지표에서 직접 ?</b>'],code:'4'}
+];
+const FEEDBACK=[
+ {label:'반사율 되먹임',steps:['기온 상승','빙하·눈 면적 감소','지표 반사율 감소','흡수하는 태양 복사 에너지 증가']},
+ {label:'동토층 되먹임',steps:['기온 상승','영구 동토층 융해','메테인 방출','대기 중 온실 기체 증가']},
+ {label:'바다 되먹임',steps:['기온 상승','해수 온도 상승','바다에 녹는 이산화 탄소 감소','대기 중 이산화 탄소 증가']}
+];
+
+const ROOM_DEFS=[
+ {key:'match',build(){return {type:'match',name:'관측 기록실',page:'8쪽 · 과거 기후',
+   story:'녹아내린 빙하 물이 <b>관측 기록실</b>로 새어 들어와 과거 기후 자료들이 뒤엉켰다. 각 장비가 어떤 <b>기록</b>을 남기는지 알맞은 <b>정보</b>와 다시 이어야 문이 열린다.',
+   hint:'빙하 기포=당시 대기, 나이테=기온·강수량, 산호 성장률=과거 수온, 꽃가루=식생·기온 경향, 빙하 '+R+' 비=과거 기온. 기록은 그걸 남긴 주체가 존재한 기간만 담는다.',
+   pairs:pick(MATCH_POOL,4)};}},
+ {key:'iso',build(){return {type:'switch',name:'동위원소 분석실',page:'8쪽 · 산소 동위원소',
+   story:'기지 외벽 빙하가 쩍 갈라지며 전력이 튀어, <b>산소 동위원소</b> 분석 패널의 스위치가 전부 뒤섞였다. 설명이 맞는지 틀리는지 가려 패널을 복구하라.',
+   hint:O+'은 무거워 증발이 덜 된다. 온난기: 빙하 '+O+'↑('+R+'비 높음), 해양 화석 '+O+'↓. 한랭기: 그 반대. 태양 복사=가시광선, 지구 방출=적외선.',
+   items:pick(ISO_POOL,3).map(it=>({q:it.q,a:it.a}))};}},
+ {key:'lat',build(){return {type:'switch',name:'대기 대순환 통제실',page:'9·12쪽 · 위도별 복사',
+   story:'냉각 장치가 과열돼 <b>위도별 에너지 수송</b> 통제 패널이 꺼졌다. 설명의 참·거짓을 가려 대순환 장치를 다시 켜라.',
+   hint:'저위도는 흡수>방출(과잉), 고위도는 방출>흡수(부족). 남는 에너지는 대기·해수 순환이 고위도로 옮긴다. 지구는 받은 만큼 적외선으로 방출해 복사 평형.',
+   items:pick(LAT_POOL,3).map(it=>({q:it.q,a:it.a}))};}},
+ {key:'refl',build(){const SC=[
+    {s:'빙하가 녹아 어두운 바다와 토양이 드러났다.',items:[['지표 반사율','down'],['지표가 흡수하는 태양 복사 에너지','up'],['지구 평균 기온','up']]},
+    {s:'한파로 눈·빙하에 덮인 면적이 넓어졌다.',items:[['지표 반사율','up'],['지표가 흡수하는 태양 복사 에너지','down'],['지구 평균 기온','down']]},
+    {s:'울창한 숲이 밝은 사막(모래)으로 바뀌었다.',items:[['그 지역의 반사율','up'],['그 지역이 흡수하는 태양 복사 에너지','down'],['그 지역의 기온','down']]}];
+   const c=pick(SC,1)[0];
+   return {type:'trend',name:'반사율 제어실',page:'9쪽 · 지표 반사율',
+   story:'냉각이 멈춘 사이 창밖 지표가 변해버렸다 — <b>'+c.s+'</b> <b>반사율 제어실</b> 계기판이 요동친다. (반사율 값은 아래 표에 주어진다.)',
+   hint:'밝은 표면일수록 반사율이 크다. 반사율이 커지면 지표가 흡수하는 태양 복사 에너지가 줄어 기온이 내려가고, 반사율이 작아지면 그 반대다.',
+   ask:'위 상황에서 각 값이 어떻게 변하나요?',items:c.items};}},
+ {key:'heat',build(){const v=pick(HEAT_VARIANTS,1)[0];
+   return {type:'digits',name:'열수지 코어',page:'9쪽 · 복사 평형',
+   story:'과열로 <b>열수지 코어</b>의 계기 하나가 타버려 수치가 비었다. <b>복사 평형(흡수=방출)</b>을 이용해 빠진 값을 찾아 코어를 안정화하라.',
+   hint:'복사 평형이면 흡수량=방출량. 지구(우주 기준): 흡수 70 = 방출 70(대기 66 + 지표 직접 4). 지표: 흡수 133(태양 45 + 대기 재복사 88) = 방출 133(전도대류 8 + 증발 21 + 지표 복사 104).',
+   ask:v.ask,code:v.code,len:v.code.length,clues:v.clue};}},
+ {key:'feedback',build(){const f=pick(FEEDBACK,1)[0];
+   return {type:'order',name:'폭주 제어 코어',page:'10쪽 · 온난화 되먹임',
+   story:'제어봉이 녹아내리며 <b>'+f.label+'</b> 되먹임 고리가 폭주해 온실가스가 치솟는다. 원인에서 결과 순서로 되짚어 고리를 끊어라.',
+   hint:'되먹임은 스스로 강해지는 고리다. 기온 상승이 변화를 부르고, 그 변화가 다시 기온을 끌어올린다. 무엇이 먼저 일어나는 "원인"인지 생각하자.',
+   steps:f.steps};}},
+ {key:'enso',build(){const base=[{p:'무역풍이 부는 방향 (동 → 서)',a:'left'},{p:'따뜻한 표층 해수가 쌓이는 쪽으로의 이동',a:'left'},{p:'동태평양에서 심층의 찬물이 올라오는 방향(용승)',a:'up'}];
+   return {type:'dir',name:'해류 통제실',page:'11쪽 · 엘니뇨·라니냐',
+   story:'마지막 탈출 해치는 해류 좌표로 잠겨 있다. 엘니뇨로 뒤틀리기 전 <b>평상시</b> 적도 태평양의 흐름을 방향으로 입력하면 탈출로가 열린다.',
+   hint:'평상시 무역풍은 동→서(←). 따뜻한 표층 해수도 서쪽에 쌓인다(←). 동태평양에서는 빠져나간 표층 해수를 채우려 심층의 찬물이 올라온다 — 용승(↑).',
+   slots:shuffle(base)};}}
+];
+
+const TIME_LIMIT={normal:600, hard:390};  // 초(초기 제한 시간)
+const TIME_BONUS={normal:45, hard:30};    // 문을 풀 때마다 얻는 시간 보너스
+const KEY='escape-glacier-v1';
+let SAVE={name:'',bestNormal:0,bestHard:0};
+try{const r=localStorage.getItem(KEY);if(r)SAVE=Object.assign(SAVE,JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(SAVE));}catch(e){}};
+
+/* ===== 상태 ===== */
+let hard=false, rooms=[], cur=0, gauge=0, hintsUsed=0, peak=0, sceneOpen=true;
+let timeLeft=0, timerId=null, limit=0, runStart=0;
+const app=document.getElementById('app');
+const fmt=s=>String(Math.floor(s/60)).padStart(1,'0')+':'+String(s%60).padStart(2,'0');
+
+/* ===== 홈 ===== */
+function home(){
+  stopTimer();setVig(0);updateAmbient(0);document.body.classList.remove('crisis');
+  const best=t=>t?fmt(t):'—';
+  app.innerHTML=`
+  <div class="center" style="margin-top:14px">
+    <div class="titlebadge">ESCAPE ❄ GLACIER BASE</div>
+    <div class="logo">빙하 기지<br>탈출</div>
+    <div class="tagline">통합과학2 · 지구 환경 변화와 인간 생활</div>
+    <div class="byline">${BYLINE}</div>
+  </div>
+  <div class="story" style="margin-top:18px">
+    얼음 폭풍으로 <b>빙하 연구 기지</b>에 갇혔다. 제어 장치가 과열되며 <b>온실가스</b>가 샌다.
+    제한 시간 안에 문을 열어 탈출하지 못하거나 실수가 쌓이면 <b>온난화가 폭주</b>하고, 그 되먹임의 끝에서 역설적으로 <b>급격한 빙하기</b>가 닥친다.
+    8~12쪽 개념을 풀어 <b>잠긴 문들</b>을 열고 빠져나가라. <b>틀릴 때마다 지구에 재난이 번진다.</b>
+  </div>
+  <div style="margin:14px 0 6px"><input class="name" id="nm" placeholder="탈출자 이름 (예: 1학년 3반 홍길동)" value="${esc(SAVE.name)}"></div>
+  <div class="panel" style="margin-top:10px">
+    <div class="qtag">난이도 선택 — 틀렸을 때가 달라져요</div>
+    <div class="modepick">
+      <button class="modecard ${!hard?'on':''}" data-h="0">
+        <div class="mc-top"><span class="mc-ic">🛡️</span><span class="mc-nm">일반</span><span class="mc-chk">선택됨 ✓</span></div>
+        <div class="mc-dc">제한 <b>10분</b>, 문을 풀면 <b>+45초</b>. 실수해도 <b>탈출 실패 없이</b> 다시 시도. 힌트 무제한·무료.</div>
+        <div class="mc-tag">누구나 · 최고기록 ${best(SAVE.bestNormal)}</div>
+      </button>
+      <button class="modecard hard ${hard?'on':''}" data-h="1">
+        <div class="mc-top"><span class="mc-ic">⚔️</span><span class="mc-nm">하드</span><span class="mc-chk">선택됨 ✓</span></div>
+        <div class="mc-dc">제한 <b>6분 30초</b>, 문을 풀면 <b>+30초</b>. <b>온난화 게이지</b>가 가득 차면 <b>빙하기 엔딩</b>→처음부터. 힌트는 게이지 +1.</div>
+        <div class="mc-tag">긴장감 · 최고기록 ${best(SAVE.bestHard)}</div>
+      </button>
+    </div>
+  </div>
+  <div class="center"><button class="btn gold" id="go" style="margin-top:18px;font-size:1.1rem;padding:14px 28px">▶ 탈출 시작</button></div>
+  <div class="byline bottom">${BYLINE}</div>`;
+  $('#nm').oninput=e=>{SAVE.name=e.target.value;save();};
+  document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{hard=b.dataset.h==='1';home();});
+  $('#go').onclick=startRun;
+  window.scrollTo(0,0);
+}
+
+function startRun(){
+  rooms=shuffle(ROOM_DEFS).slice(0,6).map(d=>d.build());  // 7개 중 6개 랜덤·순서 셔플
+  cur=0;gauge=0;hintsUsed=0;peak=0;
+  limit=hard?TIME_LIMIT.hard:TIME_LIMIT.normal;timeLeft=limit;runStart=Date.now();
+  startTimer();
+  renderRoom();
+}
+
+/* ===== 타이머 ===== */
+function startTimer(){stopTimer();timerId=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){stopTimer();timeUpEnding();}},1000);}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+function updateTimer(){const t=$('#timer');if(t){t.textContent=fmt(Math.max(0,timeLeft));t.classList.toggle('low',timeLeft<=60);}}
+function timeBonus(sec){
+  timeLeft+=sec;updateTimer();
+  const t=$('#timer');if(t){t.classList.add('plus');setTimeout(()=>{const t2=$('#timer');if(t2)t2.classList.remove('plus');},800);}
+  const d=document.createElement('div');d.className='toast';d.textContent='⏱️ +'+sec+'초 — 시간 확보!';document.body.appendChild(d);
+  setTimeout(()=>d.remove(),1500);
+}
+
+/* ===== 게이지/멸망 ===== */
+function setVig(level){const v=$('#vig');if(!v)return;const f=Math.min(level,NORMAL_CAP)/NORMAL_CAP;
+  v.style.opacity=f?1:0;v.style.boxShadow='inset 0 0 '+Math.round(40+120*f)+'px '+Math.round(10+90*f)+'px rgba(200,20,20,'+(0.12+0.5*f)+')';}
+function flashDoom(level){
+  const idx=Math.min(level-1, DOOM.length-1); if(idx<0) return;
+  const dm=DOOM[idx];
+  const fl=$('#flash');
+  fl.innerHTML=`<div class="fbox"><div class="fs">⚠ WARNING · 지구 재난 ${level}단계</div><div class="ft">${dm.t}</div><div class="fd">${dm.d}</div></div>`;
+  fl.classList.remove('show','green');void fl.offsetWidth;fl.classList.add('show');
+  document.body.classList.remove('quake');void document.body.offsetWidth;document.body.classList.add('quake');
+  setTimeout(()=>document.body.classList.remove('quake'),520);
+  const st=$('#status');if(st)st.textContent='🌍 '+dm.t+' — '+dm.d;
+}
+function raiseGauge(){
+  gauge++;
+  const cap=hard?HARD_LIMIT:NORMAL_CAP;peak=Math.max(peak,Math.min(gauge,cap)/cap);
+  if(!(hard&&gauge>=HARD_LIMIT)) flashDoom(hard?gauge:Math.min(gauge,NORMAL_CAP));
+  refreshGauge();updateScene();
+}
+function gaugeHTML(){
+  const pct=Math.min(100, hard? gauge/HARD_LIMIT*100 : Math.min(gauge,NORMAL_CAP)/NORMAL_CAP*100);
+  const lvl=gauge===0?'안정':gauge<3?'주의':gauge<(hard?HARD_LIMIT:NORMAL_CAP+1)?'경고':'폭주';
+  return `<div class="gauge"><div class="lab"><span>🌡️ 온난화 게이지</span><span>${hard?`<b>${gauge}/${HARD_LIMIT}</b> · ${lvl}`:lvl}</span></div>
+    <div class="gbar"><i style="width:${pct}%"></i></div><div class="status" id="status"></div></div>`;
+}
+function refreshGauge(){const g=$('.gauge');if(g){const cur=$('#status')?$('#status').textContent:'';g.outerHTML=gaugeHTML();const s=$('#status');if(s)s.textContent=cur;}}
+
+/* ===== 방 안 장면(캐릭터가 온난화와 싸운다) ===== */
+function mix(a,b,t){const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)),pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16));
+  return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function sceneHTML(){return `<div class="scene ${sceneOpen?'':'collapsed'}" id="scene">
+  <button class="scoll" id="scToggle">${sceneOpen?'▲ 접기':'▼ 재난 현황'}</button>
+  <svg class="earth" viewBox="0 0 360 150" preserveAspectRatio="xMidYMid meet">
+    <defs><radialGradient id="heatg" cx="50%" cy="40%" r="72%">
+      <stop offset="0%" stop-color="#ff5a2a" stop-opacity="0.85"/><stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient></defs>
+    <rect id="ocean" x="0" y="0" width="360" height="150" fill="#1b4a63"/>
+    <rect id="land" x="0" y="100" width="360" height="50" fill="#7a5f38" stroke="#16304a" stroke-width="2"/>
+    <rect id="grass" x="0" y="96" width="360" height="6" fill="#2f7b4e"/>
+    <!-- A: 폭염 → 쓰러지는 사람 -->
+    <g id="cHeat" opacity="0"><text class="ic" x="80" y="34" font-size="30">🥵</text><text class="lbl" x="80" y="51">폭염·열대야</text></g>
+    <text id="arA" class="arrow" x="80" y="72" opacity="0">↓</text>
+    <text id="vPerson" class="ic" x="80" y="99" font-size="30">🧍</text>
+    <g id="mosq" opacity="0"><text class="ic fly" x="116" y="60" font-size="20">🦟</text><text class="ic fly f2" x="136" y="80" font-size="15">🦟</text></g>
+    <!-- B: 집중호우 → 물에 잠기는 집 -->
+    <g id="cRain" opacity="0"><text class="ic" x="185" y="30" font-size="30">🌧️</text><text class="lbl" x="185" y="47">집중호우·홍수</text></g>
+    <text id="arB" class="arrow" x="185" y="68" opacity="0">↓</text>
+    <text id="vHouse" class="ic" x="185" y="99" font-size="33">🏠</text>
+    <!-- C: 초강력 태풍 → 무너지는 건물 -->
+    <g id="cStorm" opacity="0"><text id="stormIc" class="ic" x="292" y="32" font-size="42">🌀</text><text class="lbl" x="292" y="51">초강력 태풍</text></g>
+    <text id="arC" class="arrow" x="292" y="70" opacity="0">↓</text>
+    <text id="vBldg" class="ic" x="292" y="99" font-size="36">🏢</text>
+    <rect id="flood" x="0" y="150" width="360" height="0" fill="#2f9fd0" opacity="0.5"/>
+    <g id="smoke"><text class="ic" x="26" y="120" font-size="26">🏭</text>
+      <text class="puff" x="22" y="104" font-size="16" text-anchor="middle">💨</text>
+      <text class="puff p2" x="22" y="104" font-size="16" text-anchor="middle">💨</text></g>
+    <rect id="heat" x="0" y="0" width="360" height="150" fill="url(#heatg)" opacity="0"/>
+  </svg>
+  <div class="scene-tag" id="sceneTag"></div>
+</div>`;}
+function updateScene(){
+  const sc=$('#scene');if(!sc)return;
+  const cap=hard?HARD_LIMIT:NORMAL_CAP, f=Math.min(gauge,cap)/cap;
+  const pf=Math.max(peak,f);                         // 누적된 최대 재난 — 한 번 일어나면 지속
+  const E=id=>sc.querySelector(id);
+  const show=(id,on)=>{const el=E(id);if(el)el.setAttribute('opacity',on?'1':'0');};
+  setVig(pf*NORMAL_CAP);
+  const floodH=pf*66;                                                  // 집중호우·홍수 → 물이 차오름, 땅·집 침수(지속)
+  E('#flood').setAttribute('height',floodH.toFixed(1));E('#flood').setAttribute('y',(150-floodH).toFixed(1));
+  const landGone=Math.max(0,1-pf*0.9).toFixed(2);
+  E('#land').setAttribute('opacity',landGone);E('#grass').setAttribute('opacity',landGone);
+  const heatOn=pf>=0.18;show('#cHeat',heatOn);show('#arA',heatOn);show('#mosq',heatOn);   // A. 폭염·열대야 → 모기 급증 → 사람
+  const vp=E('#vPerson');
+  if(pf>=0.78){vp.textContent='🧟';vp.removeAttribute('transform');vp.classList.add('sway');}
+  else if(heatOn){vp.textContent='😵';vp.setAttribute('transform','rotate(82 80 99)');vp.classList.remove('sway');}
+  else{vp.textContent='🧍';vp.removeAttribute('transform');vp.classList.remove('sway');}
+  const rainOn=pf>=0.4;show('#cRain',rainOn);show('#arB',rainOn);            // B. 집중호우 → 집 침수(flood가 덮음)
+  const typhoon=pf>=0.6;show('#cStorm',typhoon);show('#arC',typhoon);        // C. 태풍 → 건물 붕괴
+  const si=E('#stormIc');if(typhoon){si.classList.add('spin');si.classList.toggle('fast',pf>=0.85);}else{si.classList.remove('spin','fast');}
+  const vb=E('#vBldg');
+  if(typhoon){vb.textContent='🏚️';vb.classList.add('shake');}else{vb.textContent='🏢';vb.classList.remove('shake');}
+  E('#heat').setAttribute('opacity',(pf*0.5).toFixed(2));
+  E('#smoke').querySelector('.p2').style.display = pf>=0.4?'':'none';
+  const oc=mix('#1b4a63','#3a1622',pf);E('#ocean').setAttribute('fill',oc);sc.style.background=oc;
+  sc.classList.toggle('danger', pf>=0.6);
+  sc.classList.toggle('crisis', pf>=0.78);
+  document.body.classList.toggle('crisis', pf>=0.78);                       // 멸망 임박 — 화면 균열·깜빡임
+  $('#sceneTag').textContent = (pf===0?'🧊 안정 — 지구를 지켜라'
+    : pf<.2?'🥵 폭염·열대야 — 모기가 급증한다'
+    : pf<.4?'🌧️ 집중호우·홍수 — 집이 잠긴다'
+    : pf<.6?'🌊 침수 확대 — 땅이 사라진다'
+    : pf<.78?'🌀 초강력 태풍 — 건물이 무너진다'
+    : '🧟 감염병 임계 — 사람들이 변한다!');
+  updateAmbient(Math.round(pf*5));
+}
+function solveFlash(){const fl=$('#flash');if(!fl)return;
+  fl.innerHTML=`<div class="fbox"><div class="fs" style="color:#8CF2B0">✅ STOPPED</div>
+    <div class="ft" style="text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,5px 5px 0 #1a7a4a">추가 재난 저지!</div>
+    <div class="fd">문을 열어 더 큰 재난을 막고 시간을 벌었다. 이미 벌어진 피해는 남는다.</div></div>`;
+  fl.classList.remove('show','green');void fl.offsetWidth;fl.classList.add('show','green');}
+
+/* ===== 주변 온난화 애니메이션(게이지에 따라 변함) ===== */
+let ambSpans=[];
+const AMB=[['❄️','🧊','·','❄️'],['❄️','💨','🌫️','·'],['💨','🌫️','☁️','💨'],['🔥','💨','☁️','🌫️'],['🔥','☄️','💨','🔥'],['🔥','🌋','☄️','🔥']];
+function buildAmbient(){const amb=$('#amb');if(!amb)return;let h='';
+  for(let i=0;i<14;i++){const l=Math.random()*100,d=7+Math.random()*9,dl=Math.random()*-16,sz=0.9+Math.random()*1.2;
+    h+=`<span style="left:${l}%;font-size:${sz}rem;animation-duration:${d}s;animation-delay:${dl}s"></span>`;}
+  amb.innerHTML=h;ambSpans=[...amb.querySelectorAll('span')];updateAmbient(0);}
+function updateAmbient(level){const amb=$('#amb');if(!amb)return;const set=AMB[Math.min(level,AMB.length-1)];
+  ambSpans.forEach((s,i)=>s.textContent=set[i%set.length]);
+  amb.style.opacity=0.3+Math.min(level,5)/5*0.55;
+  amb.style.filter=level>=3?'drop-shadow(0 0 5px rgba(255,80,40,.55))':'none';}
+
+/* ===== 방 ===== */
+function renderRoom(){
+  const r=rooms[cur];
+  app.innerHTML=`
+  <div class="byline play">${BYLINE}</div>
+  <div class="hud">
+    <span class="rm">문 ${cur+1} / ${rooms.length} · ${r.name}<small>${r.page}</small></span>
+    <span class="right"><span class="timer" id="timer">${fmt(timeLeft)}</span>${hard?'<br><span class="hchip">⚔ HARD</span>':''}</span>
+  </div>
+  ${sceneHTML()}
+  ${gaugeHTML()}
+  <div class="panel">
+    <div class="sblock"><span class="slabel">📡 상황</span><span class="stxt">${r.story}</span></div>
+    <hr class="sdiv">
+    <div class="mhead">🎯 미션</div>
+    <div id="puz"></div>
+    <div id="fb"></div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <button class="btn g" id="hint" style="padding:8px 14px">💡 힌트${hard?' (게이지 +1)':''}</button>
+      <button class="btn g" id="quit" style="padding:8px 14px">↩ 포기</button>
+    </div>
+    <div id="hintbox"></div>
+  </div>`;
+  updateTimer();updateScene();
+  PUZZLE[r.type](r, $('#puz'));
+  $('#hint').onclick=()=>{
+    if($('#hintbox').innerHTML)return;
+    if(hard){raiseGauge();if(checkDoom())return;}
+    hintsUsed++;
+    $('#hintbox').innerHTML=`<div class="hintbox"><b>💡 개념 힌트</b><br>${r.hint}</div>`;
+  };
+  $('#quit').onclick=()=>{stopTimer();home();};
+  const tg=$('#scToggle');if(tg)tg.onclick=()=>{sceneOpen=!sceneOpen;$('#scene').classList.toggle('collapsed',!sceneOpen);tg.textContent=sceneOpen?'▲ 접기':'▼ 재난 현황';if(sceneOpen)updateScene();};
+  window.scrollTo(0,0);
+}
+function wrongTry(msg){
+  raiseGauge();
+  const fb=$('#fb');if(fb)fb.innerHTML=`<div class="fb no"><span class="v">🔒 잠금 유지</span>${msg||'아직 맞지 않다. 단서를 다시 보고 시도하자.'}</div>`;
+  return checkDoom();
+}
+function checkDoom(){ if(hard && gauge>=HARD_LIMIT){ iceAgeEnding(); return true; } return false; }
+function solved(){
+  if(cur<rooms.length-1){
+    const bonus=hard?TIME_BONUS.hard:TIME_BONUS.normal;timeBonus(bonus);   // 문을 풀면 시간 보너스
+    solveFlash();                                                          // 추가 재난 저지(이미 벌어진 피해는 지속)
+    const fb=$('#fb');if(fb)fb.innerHTML=`<div class="fb ok"><span class="v">🔓 문이 열렸다! ⏱️ +${bonus}초</span>더 큰 재난을 막고 시간을 벌었다. 다음 구역으로!</div>`;
+    document.querySelectorAll('#puz button,#puz input').forEach(b=>b.disabled=true);
+    setTimeout(()=>{cur++;renderRoom();},1000);
+  }else{ setTimeout(escapeEnding,700); }
+}
+
+/* ===== 퍼즐 ===== */
+const PUZZLE={
+  match(r,box){
+    box.innerHTML=`<div class="qtag">🔗 기록과 정보를 연결</div>
+      <div class="ptitle">왼쪽 기록을 누른 뒤, 오른쪽의 알맞은 정보를 누르세요.</div>
+      <div class="matchwrap">
+        <div class="mcol"><h4>기록</h4>${r.pairs.map((p,i)=>`<button class="mi L" data-i="${i}">${p[0]}</button>`).join('')}</div>
+        <div class="mcol"><h4>정보</h4>${shuffle(r.pairs.map((p,i)=>({t:p[1],i}))).map(o=>`<button class="mi R" data-i="${o.i}">${o.t}</button>`).join('')}</div>
+      </div>`;
+    let sel=null,done=0;const Ls=box.querySelectorAll('.mi.L'),Rs=box.querySelectorAll('.mi.R');
+    Ls.forEach(b=>b.onclick=()=>{if(b.classList.contains('done'))return;Ls.forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=b;});
+    Rs.forEach(b=>b.onclick=()=>{if(b.classList.contains('done'))return;
+      if(!sel){b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),350);return;}
+      if(b.dataset.i===sel.dataset.i){sel.classList.remove('sel');sel.classList.add('done');b.classList.add('done');sel=null;done++;if(done===r.pairs.length)solved();}
+      else{b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),350);wrongTry('그 연결은 맞지 않다. 다시 골라 보자.');}
+    });
+  },
+  switch(r,box){
+    box.innerHTML=`<div class="qtag">🔀 O / X 스위치 패널</div>
+      <div class="ptitle">각 설명이 옳으면 O, 틀리면 X로 맞추고 가동하세요.</div>
+      <div class="swlist">${r.items.map((it,i)=>`<div class="sw" data-i="${i}"><div class="q">${it.q}</div>
+        <div class="ox"><button data-v="O">O 옳다</button><button data-v="X">X 옳지 않다</button></div></div>`).join('')}</div>
+      <div class="center" style="margin-top:14px"><button class="btn gold" id="unlock">🔓 가동</button></div>`;
+    const sel=r.items.map(()=>null);
+    box.querySelectorAll('.sw').forEach((sw,i)=>sw.querySelectorAll('.ox button').forEach(b=>b.onclick=()=>{
+      sel[i]=b.dataset.v;sw.querySelectorAll('.ox button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+    $('#unlock').onclick=()=>{
+      if(sel.some(x=>x===null)){wrongTry('모든 스위치를 O 또는 X로 설정하세요.');return;}
+      const ok=r.items.every((it,i)=>(sel[i]==='O')===it.a);
+      if(ok)solved();
+      else{r.items.forEach((it,i)=>{if((sel[i]==='O')!==it.a){const sw=box.querySelector(`.sw[data-i="${i}"]`);sw.classList.add('bad');setTimeout(()=>sw.classList.remove('bad'),350);}});
+        wrongTry('일부 스위치가 틀렸다. 옳고 그름을 다시 판단하자.');}
+    };
+  },
+  trend(r,box){
+    box.innerHTML=`<div class="qtag">📈 증가 / 감소 추론</div>
+      <div class="ptitle">${r.ask}</div>
+      <div class="clue">🔎 <b>주어진 반사율</b> — 눈 85%, 빙하 60%, 토양 17% · 어두운 바다·숲은 낮음 (밝을수록 반사율↑)</div>
+      <div class="swlist">${r.items.map((it,i)=>`<div class="sw" data-i="${i}"><div class="q">${it[0]}</div>
+        <div class="ox"><button data-v="up">▲ 증가</button><button data-v="down">▼ 감소</button></div></div>`).join('')}</div>
+      <div class="center" style="margin-top:14px"><button class="btn gold" id="unlock">🔓 가동</button></div>`;
+    const sel=r.items.map(()=>null);
+    box.querySelectorAll('.sw').forEach((sw,i)=>sw.querySelectorAll('.ox button').forEach(b=>b.onclick=()=>{
+      sel[i]=b.dataset.v;sw.querySelectorAll('.ox button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+    $('#unlock').onclick=()=>{
+      if(sel.some(x=>x===null)){wrongTry('모든 항목을 ▲ 또는 ▼로 설정하세요.');return;}
+      const ok=r.items.every((it,i)=>sel[i]===it[1]);
+      if(ok)solved();
+      else{r.items.forEach((it,i)=>{if(sel[i]!==it[1]){const sw=box.querySelector(`.sw[data-i="${i}"]`);sw.classList.add('bad');setTimeout(()=>sw.classList.remove('bad'),350);}});
+        wrongTry('일부 방향이 틀렸다. 반사율 → 흡수 → 기온 순서로 생각하자.');}
+    };
+  },
+  digits(r,box){
+    box.innerHTML=`<div class="qtag">🔢 숫자 자물쇠</div>
+      <div class="ptitle">${r.ask?r.ask:'단서를 읽고 '+r.len+'자리 코드를 입력하세요.'}</div>
+      ${r.clues.map(c=>`<div class="clue">• ${c}</div>`).join('')}
+      <div class="digits">${Array.from({length:r.len},(_,i)=>`<input inputmode="numeric" maxlength="1" data-d="${i}" aria-label="자리 ${i+1}">`).join('')}</div>
+      <div class="center"><button class="btn gold" id="unlock">🔓 잠금 해제</button></div>`;
+    const ins=box.querySelectorAll('.digits input');
+    ins.forEach((inp,i)=>{inp.oninput=()=>{inp.value=inp.value.replace(/[^0-9]/g,'');if(inp.value&&ins[i+1])ins[i+1].focus();};
+      inp.onkeydown=e=>{if(e.key==='Backspace'&&!inp.value&&ins[i-1])ins[i-1].focus();if(e.key==='Enter')$('#unlock').click();};});
+    $('#unlock').onclick=()=>{const val=[...ins].map(x=>x.value).join('');
+      if(val.length<r.len){wrongTry('모든 자리를 입력하세요.');return;}
+      if(val===r.code)solved();
+      else{ins.forEach(x=>{x.style.borderColor='var(--warn)';});setTimeout(()=>ins.forEach(x=>x.style.borderColor=''),400);wrongTry('코드가 다르다. 단서의 값을 다시 확인하자.');}
+    };
+  },
+  order(r,box){
+    const correct=r.steps;
+    box.innerHTML=`<div class="qtag">🧩 원인 → 결과 순서 맞추기</div>
+      <div class="ptitle">되먹임 고리를 순서대로 눌러 완성하세요.</div>
+      <div class="chain" id="chain"><span>시작</span></div>
+      <div class="orderpad">${shuffle(correct.map((t,i)=>({t,i}))).map(o=>`<button class="oi" data-i="${o.i}"><span class="num">?</span><span>${o.t}</span></button>`).join('')}</div>`;
+    let next=0;
+    box.querySelectorAll('.oi').forEach(b=>b.onclick=()=>{if(b.classList.contains('done'))return;
+      if(+b.dataset.i===next){b.classList.add('done');b.querySelector('.num').textContent=next+1;
+        $('#chain').insertAdjacentHTML('beforeend',`<span>${correct[next]}</span>`);next++;
+        if(next===correct.length){$('#chain').insertAdjacentHTML('beforeend',`<span style="border-color:var(--warn)">다시 기온 상승 🔁</span>`);solved();}}
+      else{b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),350);wrongTry('그 단계가 먼저 올 수 없다. 무엇이 원인인지 생각하자.');}
+    });
+  },
+  dir(r,box){
+    const sym={up:'↑',down:'↓',left:'←',right:'→'};
+    box.innerHTML=`<div class="qtag">🧭 방향 자물쇠</div>
+      <div class="ptitle">각 칸의 설명에 맞는 방향을 아래 패드로 차례대로 입력하세요.</div>
+      <div class="slots">${r.slots.map((s,i)=>`<div class="slot" data-s="${i}"><span class="ar">·</span><span>${s.p}</span></div>`).join('')}</div>
+      <div class="dirpad"><button class="dp-up" data-a="up">↑</button><button class="dp-left" data-a="left">←</button>
+        <button class="dp-right" data-a="right">→</button><button class="dp-down" data-a="down">↓</button></div>`;
+    let idx=0;
+    box.querySelectorAll('.dirpad button').forEach(b=>b.onclick=()=>{if(idx>=r.slots.length)return;
+      if(b.dataset.a===r.slots[idx].a){const slot=box.querySelector(`.slot[data-s="${idx}"]`);slot.classList.add('filled');slot.querySelector('.ar').textContent=sym[r.slots[idx].a];idx++;if(idx===r.slots.length)solved();}
+      else{const slot=box.querySelector(`.slot[data-s="${idx}"]`);slot.classList.add('bad');setTimeout(()=>slot.classList.remove('bad'),350);wrongTry('그 방향이 아니다. 평상시 흐름을 떠올리자.');}
+    });
+  }
+};
+
+/* ===== 엔딩 ===== */
+function escapeEnding(){
+  stopTimer();setVig(0);
+  const used=Math.round((Date.now()-runStart)/1000);   // 실제 탈출에 걸린 시간
+  const key=hard?'bestHard':'bestNormal';
+  const isBest=!SAVE[key]||used<SAVE[key];
+  if(isBest){SAVE[key]=used;save();}
+  app.innerHTML=`
+  <div class="byline play">${BYLINE}</div>
+  <div class="ending good">
+    <div class="winscene">
+      <div class="conf">🎉 ✨ ❄️ ✨ 🎉</div>
+      <div class="wi door">🚪</div>
+      <div class="wi hero-run">🧑‍🔬💨</div>
+      <div class="wi earth">🌍</div>
+    </div>
+    <div class="end-sfx">ESCAPE!</div>
+    <div class="big">탈출 성공 — 평형을 되찾다</div>
+    <p class="sub">${esc(SAVE.name)||'탈출자'} 님, 잠긴 문을 모두 열고 기지를 빠져나왔다.</p>
+    <div class="epi">
+      <b>에필로그 (12쪽).</b> 폭주하던 온실가스를 제때 멈춘 덕에 급격한 기후 변화를 피했다. 현실의 지구도 같다 —
+      <b>대중교통 이용·일회용품 줄이기·친환경 제품</b> 같은 생활 실천, <b>탄소 저감 기술</b>, <b>유엔 기후 변화 협약(UNFCCC)</b> 같은 국제 협력으로
+      온실 기체 배출을 줄여야 사막화·해수면 상승·생물다양성 감소를 막을 수 있다.
+    </div>
+    <table class="stat">
+      <tr><td>난이도</td><td>${hard?'⚔ 하드':'🛡️ 일반'}</td></tr>
+      <tr><td>탈출 시간</td><td>${fmt(used)} ${isBest?'🏆 최고기록!':''}</td></tr>
+      <tr><td>최고 기록</td><td>${fmt(SAVE[key])}</td></tr>
+      <tr><td>온난화 게이지(실수)</td><td>${gauge}${hard?'/'+HARD_LIMIT:''}</td></tr>
+      <tr><td>쓴 힌트</td><td>${hintsUsed}개</td></tr>
+      ${gauge===0&&hintsUsed===0?'<tr><td colspan="2" class="center perfect">⭐ 완벽 탈출 — 실수도 힌트도 없이!</td></tr>':''}
+    </table>
+    <div class="row" style="justify-content:center">
+      <button class="btn gold" id="again">${hard?'다시 탈출 ▶':'하드로 도전 ▶'}</button>
+      <button class="btn g" id="home">처음으로</button>
+    </div>
+  </div>
+  <div class="byline bottom">${BYLINE}</div>`;
+  $('#again').onclick=()=>{if(!hard)hard=true;startRun();};
+  $('#home').onclick=home;
+  window.scrollTo(0,0);
+}
+function badEnding(sfx,big,body){
+  stopTimer();setVig(NORMAL_CAP);
+  app.innerHTML=`
+  <div class="byline play">${BYLINE}</div>
+  <div class="ending bad">
+    <div class="end-sfx">${sfx}</div>
+    <div class="big">${big}</div>
+    <div class="epi">${body}<br><br><b>다시 도전하자.</b> 단서를 더 신중히 읽고, 막히면 힌트를 활용하자.</div>
+    <div class="row" style="justify-content:center">
+      <button class="btn warn" id="retry">▶ 처음부터 다시</button>
+      <button class="btn g" id="home">난이도 바꾸기</button>
+    </div>
+  </div>`;
+  $('#retry').onclick=startRun;
+  $('#home').onclick=home;
+  window.scrollTo(0,0);
+}
+function iceAgeEnding(){badEnding('❄ GAME OVER ❄','온난화 폭주 → 빙하기 도래',
+  '온실가스를 제때 막지 못하자 <b>지구 온난화가 폭주</b>했다. 극지 얼음이 녹아 바다로 쏟아지고 해류 순환이 교란되면서, 역설적으로 열이 고위도로 전달되지 못해 <b>급격한 빙하기</b>가 찾아왔다. 작은 실수가 쌓여 거대한 되먹임을 되돌릴 수 없게 된 것이다.');}
+function timeUpEnding(){badEnding('⏰ TIME OVER ⏰','시간 초과 → 온난화 폭주',
+  '제한 시간 안에 탈출하지 못하는 사이 기지가 완전히 과열됐다. <b>온실 기체가 걷잡을 수 없이 쌓여</b> 지구 평형이 무너지고, 거대한 기후 재난이 연쇄적으로 닥쳤다.');}
+
+buildAmbient();
+home();
+</script>
+</body>
+</html>
